@@ -235,7 +235,7 @@ SRC_C += \
 	packages/$(MCU_PACKAGE).c
 
 ifneq ($(CIRCUITPY_USB),0)
-SRC_C += lib/tinyusb/src/portable/synopsys/dwc2/dcd_dwc2.c
+SRC_C += lib/tinyusb/src/portable/st/synopsys/dcd_synopsys.c
 endif
 
 SRC_S = \
