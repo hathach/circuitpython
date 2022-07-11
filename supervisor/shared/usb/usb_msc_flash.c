@@ -157,8 +157,14 @@ int32_t tud_msc_scsi_cb(uint8_t lun, const uint8_t scsi_cmd[16], void *buffer, u
 
 void tud_msc_capacity_cb(uint8_t lun, uint32_t *block_count, uint16_t *block_size) {
     fs_user_mount_t *vfs = get_vfs(lun);
-    disk_ioctl(vfs, GET_SECTOR_COUNT, block_count);
-    disk_ioctl(vfs, GET_SECTOR_SIZE, block_size);
+
+    if (vfs) {
+        disk_ioctl(vfs, GET_SECTOR_COUNT, block_count);
+        disk_ioctl(vfs, GET_SECTOR_SIZE, block_size);
+    } else {
+        *block_count = 0;
+        *block_size = 0;
+    }
 }
 
 bool tud_msc_is_writable_cb(uint8_t lun) {
@@ -184,8 +190,11 @@ int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void *buff
     const uint32_t block_count = bufsize / MSC_FLASH_BLOCK_SIZE;
 
     fs_user_mount_t *vfs = get_vfs(lun);
-    disk_read(vfs, buffer, lba, block_count);
+    if (vfs == NULL) {
+        return -1;
+    }
 
+    disk_read(vfs, buffer, lba, block_count);
     return block_count * MSC_FLASH_BLOCK_SIZE;
 }
 
@@ -197,6 +206,10 @@ int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t *
     const uint32_t block_count = bufsize / MSC_FLASH_BLOCK_SIZE;
 
     fs_user_mount_t *vfs = get_vfs(lun);
+    if (vfs != NULL) {
+        return -1;
+    }
+
     disk_write(vfs, buffer, lba, block_count);
     // Since by getting here we assume the mount is read-only to
     // MicroPython let's update the cached FatFs sector if it's the one
